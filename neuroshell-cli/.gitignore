@@ -54,3 +54,6 @@ coverage/
 # Package managers
 conan/
 vcpkg/
+
+# User-specific folders
+herb/
