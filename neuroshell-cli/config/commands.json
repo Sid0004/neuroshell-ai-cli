@@ -1,0 +1,133 @@
+{
+  "version": "1.0",
+  "name": "NeuroShell Command Mappings",
+  "description": "Natural language to CLI command mappings",
+  
+  "command_patterns": {
+    "file_operations": {
+      "list": {
+        "keywords": ["list", "show", "display", "find", "search"],
+        "windows": "dir",
+        "linux": "ls -la",
+        "macos": "ls -la"
+      },
+      "create": {
+        "keywords": ["create", "make", "new"],
+        "windows": "type nul > {filename}",
+        "linux": "touch {filename}",
+        "macos": "touch {filename}"
+      },
+      "delete": {
+        "keywords": ["delete", "remove", "erase"],
+        "windows": "del {filename}",
+        "linux": "rm {filename}",
+        "macos": "rm {filename}",
+        "requires_confirmation": true
+      },
+      "copy": {
+        "keywords": ["copy", "duplicate"],
+        "windows": "copy {source} {destination}",
+        "linux": "cp {source} {destination}",
+        "macos": "cp {source} {destination}"
+      },
+      "move": {
+        "keywords": ["move", "rename"],
+        "windows": "move {source} {destination}",
+        "linux": "mv {source} {destination}",
+        "macos": "mv {source} {destination}"
+      }
+    },
+    
+    "directory_operations": {
+      "create": {
+        "keywords": ["create folder", "make directory", "new folder"],
+        "windows": "mkdir {name}",
+        "linux": "mkdir -p {name}",
+        "macos": "mkdir -p {name}"
+      },
+      "delete": {
+        "keywords": ["delete folder", "remove directory"],
+        "windows": "rmdir /s /q {name}",
+        "linux": "rm -rf {name}",
+        "macos": "rm -rf {name}",
+        "requires_confirmation": true,
+        "is_dangerous": true
+      },
+      "list": {
+        "keywords": ["list folders", "show directories"],
+        "windows": "dir /ad",
+        "linux": "ls -d */",
+        "macos": "ls -d */"
+      }
+    },
+    
+    "process_operations": {
+      "list": {
+        "keywords": ["list processes", "show running", "running processes"],
+        "windows": "tasklist",
+        "linux": "ps aux",
+        "macos": "ps aux"
+      },
+      "kill": {
+        "keywords": ["kill process", "stop process", "terminate"],
+        "windows": "taskkill /F /IM {name}",
+        "linux": "killall {name}",
+        "macos": "killall {name}",
+        "requires_confirmation": true,
+        "is_dangerous": true
+      }
+    },
+    
+    "network_operations": {
+      "ip_info": {
+        "keywords": ["ip address", "network info", "my ip"],
+        "windows": "ipconfig",
+        "linux": "ifconfig",
+        "macos": "ifconfig"
+      },
+      "ping": {
+        "keywords": ["ping", "check connection"],
+        "windows": "ping {host}",
+        "linux": "ping -c 4 {host}",
+        "macos": "ping -c 4 {host}"
+      }
+    },
+    
+    "system_operations": {
+      "info": {
+        "keywords": ["system info", "computer info"],
+        "windows": "systeminfo",
+        "linux": "uname -a",
+        "macos": "uname -a"
+      },
+      "disk_space": {
+        "keywords": ["disk space", "storage info"],
+        "windows": "wmic logicaldisk get size,freespace,caption",
+        "linux": "df -h",
+        "macos": "df -h"
+      },
+      "current_directory": {
+        "keywords": ["current directory", "where am i", "pwd"],
+        "windows": "cd",
+        "linux": "pwd",
+        "macos": "pwd"
+      }
+    }
+  },
+  
+  "safety": {
+    "blacklist": [
+      "format",
+      "fdisk",
+      "rm -rf /",
+      "del /s /q C:\\"
+    ],
+    "requires_confirmation": [
+      "delete",
+      "remove",
+      "kill",
+      "shutdown",
+      "reboot"
+    ]
+  }
+}

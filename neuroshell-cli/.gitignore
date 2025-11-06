@@ -1,0 +1,56 @@
+# Build directories
+build/
+bin/
+lib/
+obj/
+
+# IDE files
+.vs/
+.vscode/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+.idea/
+cmake-build-*/
+
+# Compiled files
+*.exe
+*.out
+*.o
+*.obj
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# Log files
+*.log
+neuroshell.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# External dependencies
+external/
+third_party/
+vendor/
+
+# Test outputs
+test_results/
+coverage/
+
+# Package managers
+conan/
+vcpkg/
