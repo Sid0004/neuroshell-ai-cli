@@ -1,16 +1,10 @@
+<img width="707" height="279" alt="image" src="https://github.com/user-attachments/assets/1c4d8c3b-3834-46a4-b893-b023a61dc859" />
+
+
+
 # NeuroShell AI CLI
 
-    _   __                      _____ __         ____
-   / | / /__  __  ___________  / ___// /_  ___  / / /
-  /  |/ / _ \/ / / / ___/ __ \ \__ \/ __ \/ _ \/ / / 
- / /|  /  __/ /_/ / /  / /_/ /___/ / / / /  __/ / /  
-/_/ |_/\___/\__,_/_/   \____//____/_/ /_/\___/_/_/   
-                                                      
-    Natural Language Command Line Interface v1.0
-
 🤖 neuroshell>
-
-
 
 **Natural Language Command Line Interface** - Execute CLI commands using natural language!
 
