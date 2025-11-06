@@ -1,5 +1,5 @@
+<img width="1920" height="1080" alt="NEUROSHELL" src="https://github.com/user-attachments/assets/aff4c4eb-ce0d-43f3-a59e-596abd26cd70" />
 
-![Uploading NEUROSHELL.png…]()
 
 # NeuroShell AI CLI
 
