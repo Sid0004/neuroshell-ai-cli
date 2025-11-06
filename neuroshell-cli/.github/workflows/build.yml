@@ -1,0 +1,85 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-linux:
+    name: Build on Linux
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+    
+    - name: Create build directory
+      run: mkdir build
+    
+    - name: Configure CMake
+      run: cd build && cmake ..
+    
+    - name: Build
+      run: cd build && cmake --build .
+    
+    - name: Upload Linux artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: neuroshell-linux
+        path: build/bin/neuroshell
+
+  build-windows:
+    name: Build on Windows
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v1.1
+    
+    - name: Create build directory
+      run: mkdir build
+    
+    - name: Configure CMake
+      run: cd build && cmake ..
+    
+    - name: Build
+      run: cd build && cmake --build . --config Release
+    
+    - name: Upload Windows artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: neuroshell-windows
+        path: build/bin/Release/neuroshell.exe
+
+  build-macos:
+    name: Build on macOS
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: brew install cmake
+    
+    - name: Create build directory
+      run: mkdir build
+    
+    - name: Configure CMake
+      run: cd build && cmake ..
+    
+    - name: Build
+      run: cd build && cmake --build .
+    
+    - name: Upload macOS artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: neuroshell-macos
+        path: build/bin/neuroshell
