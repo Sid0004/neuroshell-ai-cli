@@ -1,130 +1,237 @@
+
 <!-- <img width="824" height="159" alt="image" src="https://github.com/user-attachments/assets/69609f23-c476-4c1c-a4b7-5f4d7b29e8f8" /> -->
 <img width="1411" height="248" alt="image" src="https://github.com/user-attachments/assets/988f8c7a-f5be-47ef-a4c6-e7117b9318d6" />
+# NeuroShell
 
-# NeuroShell AI CLI
+**A Modern, GPU-Rendered Terminal with AI-Powered Command Translation**
 
-🤖 neuroshell>
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![C++](https://img.shields.io/badge/C++-17-blue.svg)
+![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)
 
-**Natural Language Command Line Interface** - Execute CLI commands using natural language!
+---
 
-## 🚀 Features
+## ✨ Features
 
-- **Natural Language Processing**: Write commands in plain English
-- **Smart Command Translation**: Converts NLP to actual CLI commands
-- **Cross-Platform Support**: Works on Windows, Linux, and macOS
-- **Safety Mechanisms**: Prevents dangerous command execution
-- **Learning System**: Improves with usage
-- **Command History**: Tracks your natural language commands
-- **Interactive Mode**: Chat-like interface for executing commands
+- 🎨 **Modern GPU-Rendered UI** - Built with Dear ImGui + OpenGL for smooth, beautiful interface
+- 🤖 **AI-Powered Commands** - Translate natural language to shell commands using OpenAI, Groq, Gemini, or Ollama
+- 📦 **Command Blocks** - Warp-style command history with clear visual separation
+- 🎯 **Native Desktop App** - Standalone executable, no browser required
+- 🌈 **Beautiful Themes** - Tokyo Night theme with customizable colors
+- ⚡ **Fast & Responsive** - Hardware-accelerated rendering
 
-## 📋 Examples
+---
 
-Instead of typing:
-```bash
-dir /s /b *.txt
-```
-
-Just say:
-```
-find all text files in this directory
-```
-
-More examples:
-- "show me all running processes" → `tasklist` (Windows) / `ps aux` (Linux)
-- "create a new folder called projects" → `mkdir projects`
-- "what's my ip address" → `ipconfig` (Windows) / `ifconfig` (Linux)
-- "delete file test.txt" → `del test.txt` (with confirmation)
-- "compress this folder into archive.zip" → `tar -czf archive.zip folder/`
-
-## 🛠️ Installation
+## 🚀 Quick Start
 
 ### Prerequisites
-- C++17 or higher
-- CMake 3.15+
-- cURL library (for API integration)
-- JSON library (nlohmann/json)
+
+- **Windows 10/11**
+- **Visual Studio 2022** with C++ Desktop Development
+- **CMake 3.15+**
+- **Git**
 
 ### Build Instructions
 
+1. **Clone the repository**
 ```bash
-# Clone the repository
 git clone https://github.com/yourusername/neuroshell-cli.git
 cd neuroshell-cli
-
-# Create build directory
-mkdir build && cd build
-
-# Configure and build
-cmake ..
-cmake --build .
-
-# Run
-./neuroshell
 ```
 
-## 🎯 Usage
+2. **Setup dependencies**
 
-### Interactive Mode
+The project requires the following libraries in the `thirdparty` directory:
+- **ImGui** (docking branch)
+- **GLFW**
+- **GLAD**
+- **nlohmann/json**
+
 ```bash
-./neuroshell
+# Clone ImGui (docking branch)
+cd thirdparty
+git clone -b docking https://github.com/ocornut/imgui.git
+
+# Clone GLFW
+git clone https://github.com/glfw/glfw.git
+
+# Clone nlohmann/json
+git clone https://github.com/nlohmann/json.git
+
+# GLAD - Already included in thirdparty/glad/
+cd ..
 ```
 
-### Single Command Mode
+3. **Build the project**
 ```bash
-./neuroshell "list all files"
+build.bat
 ```
 
-### With API Integration (Advanced NLP)
+4. **Run NeuroShell**
 ```bash
-./neuroshell --api-key YOUR_OPENAI_KEY "complex command description"
+run.bat
 ```
 
-## 🏗️ Architecture
+Or manually:
+```bash
+cd build\bin\Release
+neuroshell.exe
+```
+
+---
+
+## ⚙️ Configuration
+
+### AI Setup (Optional)
+
+To enable AI-powered command translation, edit `config/settings.json`:
+
+```json
+{
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "apiKey": "YOUR_API_KEY_HERE",
+    "temperature": 0.7,
+    "maxTokens": 500
+  }
+}
+```
+
+**Supported AI Providers:**
+- **OpenAI** (`gpt-4`, `gpt-3.5-turbo`)
+- **Groq** (`llama3-70b`, `mixtral-8x7b`)
+- **Gemini** (`gemini-pro`)
+- **Ollama** (`llama2`, `codellama`) - Local, no API key needed
+
+### Enabling CURL for AI Features
+
+AI features require CURL library. To enable:
+
+1. Install CURL via vcpkg:
+```bash
+vcpkg install curl:x64-windows
+```
+
+2. Rebuild with CURL enabled:
+```bash
+cd build
+cmake -DENABLE_CURL=ON -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake ..
+cmake --build . --config Release
+```
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+L` | Clear screen |
+| `Ctrl+Shift+C` | Clear history |
+| `Ctrl+J` | Toggle AI panel |
+| `Ctrl+K` | Focus command input |
+| `↑/↓` | Navigate command history |
+
+---
+
+## 🎨 Project Structure
 
 ```
-neuroshell-cli/
+NeuroShell/
 ├── src/
-│   ├── main.cpp                 # Entry point
-│   ├── nlp/
-│   │   ├── parser.cpp          # NLP parsing logic
-│   │   └── command_mapper.cpp  # Maps NLP to CLI commands
-│   ├── executor/
-│   │   └── command_executor.cpp # Executes commands safely
-│   ├── ai/
-│   │   └── api_client.cpp      # OpenAI API integration
-│   └── utils/
-│       ├── safety.cpp          # Safety checks
-│       └── logger.cpp          # Logging system
-├── include/                     # Header files
-├── tests/                       # Unit tests
-└── config/
-    └── commands.json           # Command mappings
+│   ├── main.cpp              # Application entry point
+│   ├── ui/                   # UI implementation (ImGui)
+│   ├── terminal/             # Terminal logic and command executor
+│   ├── ai/                   # AI client (OpenAI, Groq, etc.)
+│   └── utils/                # Utilities (config, logger, safety)
+├── include/                  # Header files
+├── thirdparty/               # Third-party libraries
+│   ├── imgui/
+│   ├── glfw/
+│   ├── glad/
+│   └── json/
+├── config/                   # Configuration files
+│   └── settings.json
+├── build.bat                 # Build script
+├── run.bat                   # Run script
+└── CMakeLists.txt           # CMake configuration
 ```
 
-## 🔒 Safety Features
+---
 
-- Whitelist of safe commands
-- Confirmation prompts for destructive operations
-- Sudo/Admin command blocking by default
-- Command sandboxing options
+## 🛠️ Development
 
-## 🤝 Contributing
+### Building for Development
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+```bash
+mkdir build && cd build
+cmake -G "Visual Studio 17 2022" -A x64 ..
+cmake --build . --config Debug
+```
+
+### Adding Features
+
+1. UI components: Modify `src/ui/ui.cpp`
+2. Terminal logic: Modify `src/terminal/terminal.cpp`
+3. Command execution: Modify `src/terminal/command_executor.cpp`
+4. AI integration: Modify `src/ai/ai_client.cpp`
+
+---
+
+## 🐛 Troubleshooting
+
+### Build Errors
+
+**Missing Dependencies**
+```
+ERROR: ImGui not found
+Fix: cd thirdparty && git clone -b docking https://github.com/ocornut/imgui.git
+```
+
+**CMake Configuration Failed**
+- Ensure Visual Studio 2022 is installed with C++ Desktop Development
+- Ensure CMake is in your PATH
+- Check that all dependencies are in `thirdparty/`
+
+### Runtime Errors
+
+**Window doesn't appear**
+- Update graphics drivers
+- Ensure OpenGL 3.3+ is supported
+- Run as administrator
+
+**AI not working**
+- Verify API key in `config/settings.json`
+- Check internet connection
+- For Ollama: ensure `ollama serve` is running
+- Rebuild with CURL enabled
+
+---
 
 ## 📄 License
 
-MIT License - See LICENSE file for details
+MIT License - see [LICENSE](LICENSE) file for details.
 
-## 🌟 Roadmap
+---
 
-- [ ] Multi-language support
-- [ ] Voice command integration
-- [ ] Custom command aliases
-- [ ] Plugin system
-- [ ] GUI version
-- [ ] Cloud sync for learned commands
+## 🙏 Acknowledgments
 
-## 📧 Contact
+- [Dear ImGui](https://github.com/ocornut/imgui) - Immediate mode GUI library
+- [GLFW](https://www.glfw.org/) - Window and input handling
+- [GLAD](https://glad.dav1d.de/) - OpenGL loader
+- [nlohmann/json](https://github.com/nlohmann/json) - JSON parsing
+- [Warp](https://www.warp.dev/) - UI inspiration
+- [Tokyo Night](https://github.com/enkia/tokyo-night-vscode-theme) - Color scheme
 
-For questions or suggestions, please open an issue on GitHub.
+---
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/neuroshell-cli/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/neuroshell-cli/discussions)
+
+---
+
+<div align="center">
+  <strong>Made with ❤️ for developers who love beautiful terminals</strong>
+</div>
