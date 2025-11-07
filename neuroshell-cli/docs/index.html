@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroShell - Talk to Your Terminal in Plain English</title>
+    <meta name="description" content="Stop Googling commands. NeuroShell translates natural language to CLI commands instantly. Free, open-source, and works everywhere.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s ease;
+        }
+        
+        .tagline {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            margin-bottom: 3rem;
+            animation: fadeInUp 1s ease;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: fadeInUp 1.2s ease;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .demo {
+            margin-top: 4rem;
+            background: rgba(0,0,0,0.3);
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 800px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            animation: fadeInUp 1.4s ease;
+        }
+        
+        .demo-line {
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .prompt {
+            color: #4ade80;
+            margin-right: 0.5rem;
+        }
+        
+        .command {
+            color: #60a5fa;
+        }
+        
+        .features {
+            background: white;
+            color: #333;
+            padding: 4rem 2rem;
+        }
+        
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .feature h3 {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            color: #667eea;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .stats {
+            display: flex;
+            gap: 3rem;
+            margin-top: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .stat-label {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>🧠 NeuroShell</h1>
+        <p class="tagline">Talk to your terminal in plain English</p>
+        
+        <div class="cta-buttons">
+            <a href="https://github.com/Sid0004/neuroshell-ai-cli/releases" class="btn btn-primary">
+                📥 Download for Windows
+            </a>
+            <a href="https://github.com/Sid0004/neuroshell-ai-cli" class="btn btn-secondary">
+                ⭐ Star on GitHub
+            </a>
+        </div>
+        
+        <div class="demo">
+            <div class="demo-line">
+                <span class="prompt">neuroshell ❯</span>
+                <span class="command">list all files</span>
+            </div>
+            <div class="demo-line">
+                <span style="color: #4ade80;">✓</span> Translates to: <span style="color: #fbbf24;">dir</span>
+            </div>
+            <div class="demo-line" style="opacity: 0.6;">
+                file1.txt  file2.txt  folder/
+            </div>
+            <br>
+            <div class="demo-line">
+                <span class="prompt">neuroshell ❯</span>
+                <span class="command">what's my IP address</span>
+            </div>
+            <div class="demo-line">
+                <span style="color: #4ade80;">✓</span> Translates to: <span style="color: #fbbf24;">ipconfig</span>
+            </div>
+            <div class="demo-line" style="opacity: 0.6;">
+                IPv4 Address: 192.168.1.100
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-number">100+</span>
+                <span class="stat-label">Commands</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">3</span>
+                <span class="stat-label">Platforms</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">0</span>
+                <span class="stat-label">Learning Curve</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="features">
+        <div class="features-grid">
+            <div class="feature">
+                <div style="font-size: 3rem;">🚀</div>
+                <h3>Zero Learning Curve</h3>
+                <p>Just say what you want. No syntax to memorize, no man pages to read.</p>
+            </div>
+            
+            <div class="feature">
+                <div style="font-size: 3rem;">🛡️</div>
+                <h3>Safe by Default</h3>
+                <p>Built-in safety checker prevents dangerous commands from running.</p>
+            </div>
+            
+            <div class="feature">
+                <div style="font-size: 3rem;">🌍</div>
+                <h3>Cross-Platform</h3>
+                <p>Works on Windows, Linux, and macOS. One tool everywhere.</p>
+            </div>
+            
+            <div class="feature">
+                <div style="font-size: 3rem;">💨</div>
+                <h3>Lightning Fast</h3>
+                <p>Native C++ performance. No network calls, works offline.</p>
+            </div>
+            
+            <div class="feature">
+                <div style="font-size: 3rem;">🎨</div>
+                <h3>Beautiful Output</h3>
+                <p>Colorful, readable terminal output with emoji indicators.</p>
+            </div>
+            
+            <div class="feature">
+                <div style="font-size: 3rem;">🔓</div>
+                <h3>100% Free</h3>
+                <p>Open-source MIT license. Free forever, no paid tiers.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "apiKey": "YOUR_API_KEY_HERE",
+    "endpoint": "",
+    "temperature": 0.7,
+    "maxTokens": 500
+  },
+  "theme": {
+    "name": "tokyo-night",
+    "colors": {
+      "background": [0.10, 0.11, 0.13, 1.00],
+      "text": [0.78, 0.81, 0.88, 1.00],
+      "accent": [0.46, 0.67, 0.98, 1.00]
+    }
+  },
+  "ui": {
+    "windowWidth": 1600,
+    "windowHeight": 900,
+    "aiPanelWidth": 400,
+    "fontSize": 16,
+    "showAIPanel": true,
+    "enableDocking": true
+  },
+  "terminal": {
+    "maxHistorySize": 1000,
+    "enableAutoComplete": true,
+    "verboseMode": false
+  },
+  "keyboard": {
+    "shortcuts": {
+      "clearScreen": "Ctrl+L",
+      "clearHistory": "Ctrl+Shift+C",
+      "toggleAI": "Ctrl+J",
+      "focusInput": "Ctrl+K",
+      "settings": "Ctrl+,"
+    }
+  }
+}

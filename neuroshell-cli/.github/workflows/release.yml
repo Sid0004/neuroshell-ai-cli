@@ -1,0 +1,133 @@
+name: Release Build
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build NeuroShell
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DBUILD_TESTS=OFF
+          cmake --build . --config Release
+      
+      - name: Create Installer
+        run: |
+          choco install innosetup -y
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\setup.iss
+      
+      - name: Upload Installer
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./installer/Output/NeuroShell-Setup.exe
+          asset_name: NeuroShell-Setup-${{ github.event.release.tag_name }}.exe
+          asset_content_type: application/octet-stream
+      
+      - name: Create Portable ZIP
+        run: |
+          cd build/bin/Release
+          7z a ../../../neuroshell-windows-portable.zip neuroshell.exe ../../../commands.json ../../../neuroshell.conf
+      
+      - name: Upload Portable ZIP
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./neuroshell-windows-portable.zip
+          asset_name: neuroshell-windows-portable-${{ github.event.release.tag_name }}.zip
+          asset_content_type: application/zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+      
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
+          make -j$(nproc)
+      
+      - name: Create DEB Package
+        run: |
+          mkdir -p neuroshell-deb/DEBIAN
+          mkdir -p neuroshell-deb/usr/local/bin
+          mkdir -p neuroshell-deb/usr/share/doc/neuroshell
+          mkdir -p neuroshell-deb/usr/share/neuroshell
+          
+          cp build/bin/Release/neuroshell neuroshell-deb/usr/local/bin/
+          cp commands.json neuroshell-deb/usr/share/neuroshell/
+          cp neuroshell.conf neuroshell-deb/usr/share/neuroshell/
+          
+          cat > neuroshell-deb/DEBIAN/control << EOF
+          Package: neuroshell
+          Version: ${{ github.event.release.tag_name }}
+          Architecture: amd64
+          Maintainer: Siddharth <your.email@example.com>
+          Description: Natural Language CLI Interface
+           Talk to your terminal in plain English. NeuroShell translates
+           natural language commands to CLI commands instantly.
+          EOF
+          
+          dpkg-deb --build neuroshell-deb
+          mv neuroshell-deb.deb neuroshell_${{ github.event.release.tag_name }}_amd64.deb
+      
+      - name: Upload DEB Package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./neuroshell_${{ github.event.release.tag_name }}_amd64.deb
+          asset_name: neuroshell_${{ github.event.release.tag_name }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Dependencies
+        run: brew install cmake
+      
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
+          make -j$(sysctl -n hw.ncpu)
+      
+      - name: Create DMG
+        run: |
+          mkdir -p NeuroShell.app/Contents/MacOS
+          mkdir -p NeuroShell.app/Contents/Resources
+          cp build/bin/Release/neuroshell NeuroShell.app/Contents/MacOS/
+          cp commands.json NeuroShell.app/Contents/Resources/
+          cp neuroshell.conf NeuroShell.app/Contents/Resources/
+          hdiutil create -volname NeuroShell -srcfolder NeuroShell.app -ov -format UDZO NeuroShell.dmg
+      
+      - name: Upload DMG
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./NeuroShell.dmg
+          asset_name: NeuroShell-${{ github.event.release.tag_name }}.dmg
+          asset_content_type: application/octet-stream
