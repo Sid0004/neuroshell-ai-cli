@@ -17,16 +17,31 @@ AIClient::~AIClient() = default;
 
 void AIClient::Initialize(const AIConfig& config) {
     config_ = config;
-    httpClient_ = std::make_unique<HttpClient>();
-    httpClient_->SetTimeout(60); // 60 seconds for AI requests
+    try {
+        httpClient_ = std::make_unique<HttpClient>();
+        httpClient_->SetTimeout(60); // 60 seconds for AI requests
+    } catch (const std::exception& e) {
+        // CURL not available - HTTP client will remain null
+        // This is OK - the IsAvailable check will catch this
+    }
 }
 
 bool AIClient::IsAvailable() const {
-    return !config_.apiKey.empty() && config_.provider != AIProvider::None;
+    return httpClient_ != nullptr && !config_.apiKey.empty() && config_.provider != AIProvider::None;
 }
 
 void AIClient::UpdateConfig(const AIConfig& config) {
     config_ = config;
+    
+    // Try to initialize httpClient if it's not already initialized
+    if (!httpClient_) {
+        try {
+            httpClient_ = std::make_unique<HttpClient>();
+            httpClient_->SetTimeout(60);
+        } catch (const std::exception& e) {
+            // CURL not available - leave httpClient_ as null
+        }
+    }
 }
 
 AIResponse AIClient::TranslateToCommand(const std::string& naturalLanguage) {

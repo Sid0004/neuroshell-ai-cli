@@ -5,11 +5,23 @@
 
 namespace NeuroShell {
 
+// Static flag to ensure CURL is initialized once globally
+static bool g_curlInitialized = false;
+
 HttpClient::HttpClient()
     : curlHandle_(nullptr)
     , timeout_(30)
     , userAgent_("NeuroShell/2.0")
 {
+    // Initialize CURL globally (once)
+    if (!g_curlInitialized) {
+        CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+        if (res != CURLE_OK) {
+            throw std::runtime_error("Failed to initialize CURL globally: " + std::string(curl_easy_strerror(res)));
+        }
+        g_curlInitialized = true;
+    }
+    
     curlHandle_ = curl_easy_init();
     if (!curlHandle_) {
         throw std::runtime_error("Failed to initialize CURL");

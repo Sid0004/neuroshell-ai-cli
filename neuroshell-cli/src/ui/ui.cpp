@@ -126,14 +126,20 @@ bool UI::Initialize(int width, int height, const char* title) {
     
 #ifdef ENABLE_CURL
     // Initialize AI client (only if CURL is available)
+    std::cout << "Creating AIClient..." << std::endl;
     aiClient_ = std::make_unique<AIClient>();
     
     // Load configuration
     LoadConfiguration();
     
-    // Initialize AI if configured
-    if (!appState_.aiConfig.apiKey.empty()) {
+    // Always initialize AI client to set up HTTP client
+    std::cout << "Initializing AIClient with config..." << std::endl;
+    try {
         aiClient_->Initialize(appState_.aiConfig);
+        std::cout << "✓ AIClient initialized successfully" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "⚠ Warning: AIClient initialization failed: " << e.what() << std::endl;
+        std::cerr << "  AI features may not work correctly" << std::endl;
     }
 #else
     appState_.showAIPanel = false; // Disable AI panel if no CURL
@@ -797,18 +803,37 @@ void UI::HandleCommandInput() {
     
     // Check if AI is enabled and this looks like natural language
     if (aiEnabled_ && simpleAI_ && simpleAI_->IsNaturalLanguage(input)) {
+        // First try SimpleAI (offline, instant)
         std::string translated = simpleAI_->TranslateToCommand(input);
         
         if (!translated.empty()) {
-            // Show what AI translated it to
-            SetStatusMessage("🤖 AI: \"" + input + "\" → " + translated);
+            // SimpleAI found a match
+            SetStatusMessage("🤖 SimpleAI: \"" + input + "\" → " + translated);
             terminal_->ExecuteCommand(translated);
             commandInputBuffer_[0] = '\0';
             return;
         }
+        
+#ifdef ENABLE_CURL
+        // SimpleAI didn't find a match, try cloud AI if available
+        if (aiClient_ && aiClient_->IsAvailable()) {
+            SetStatusMessage("🤖 Asking AI to translate: " + input);
+            
+            AIResponse response = aiClient_->TranslateToCommand(input);
+            if (response.success && !response.commands.empty()) {
+                std::string cmd = response.commands[0];
+                SetStatusMessage("🤖 Cloud AI: \"" + input + "\" → " + cmd);
+                terminal_->ExecuteCommand(cmd);
+                commandInputBuffer_[0] = '\0';
+                return;
+            } else {
+                SetStatusMessage("⚠ AI couldn't understand: " + input + " (Error: " + response.error + ")");
+            }
+        }
+#endif
     }
     
-    // Execute as normal command
+    // Execute as normal command (not natural language or AI failed)
     terminal_->ExecuteCommand(input);
     SetStatusMessage("Executed: " + input);
     commandInputBuffer_[0] = '\0';
@@ -978,27 +1003,141 @@ void UI::RenderSettingsWindow() {
                 ImGui::Spacing();
                 
 #ifdef ENABLE_CURL
+                // Static variables for UI state
+                static int currentProvider = static_cast<int>(appState_.aiConfig.provider);
+                static char apiKey[256] = "";
+                static char model[128] = "";
+                static char endpoint[256] = "";
+                static bool testing = false;
+                static std::string testResult = "";
+                
                 ImGui::Text("AI Provider Configuration");
                 ImGui::Separator();
                 
                 const char* providers[] = { "OpenAI", "Groq", "Gemini", "Ollama", "None" };
-                static int currentProvider = 0;
-                ImGui::Combo("Provider", &currentProvider, providers, IM_ARRAYSIZE(providers));
-                
-                ImGui::Spacing();
-                static char apiKey[256] = "";
-                ImGui::InputText("API Key", apiKey, sizeof(apiKey), ImGuiInputTextFlags_Password);
-                
-                static char model[128] = "gpt-4";
-                ImGui::InputText("Model", model, sizeof(model));
-                
-                ImGui::Spacing();
-                if (ImGui::Button("Test Connection", ImVec2(150, 0))) {
-                    SetStatusMessage("Testing AI connection...");
+                if (ImGui::Combo("Provider", &currentProvider, providers, IM_ARRAYSIZE(providers))) {
+                    appState_.aiConfig.provider = static_cast<AIProvider>(currentProvider);
                 }
+                
+                ImGui::Spacing();
+                
+                // Show API key input for cloud providers
+                if (currentProvider < 3) { // OpenAI, Groq, Gemini
+                    if (apiKey[0] == '\0' && !appState_.aiConfig.apiKey.empty()) {
+                        strncpy_s(apiKey, appState_.aiConfig.apiKey.c_str(), sizeof(apiKey) - 1);
+                    }
+                    
+                    ImGui::InputText("API Key", apiKey, sizeof(apiKey), ImGuiInputTextFlags_Password);
+                    
+                    // Show hint for getting API keys
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 0.7f, 1.0f));
+                    if (currentProvider == 0) { // OpenAI
+                        ImGui::TextWrapped("Get your API key from: https://platform.openai.com/api-keys");
+                    } else if (currentProvider == 1) { // Groq
+                        ImGui::TextWrapped("Get your API key from: https://console.groq.com/keys");
+                    } else if (currentProvider == 2) { // Gemini
+                        ImGui::TextWrapped("Get your API key from: https://makersuite.google.com/app/apikey");
+                    }
+                    ImGui::PopStyleColor();
+                    
+                    appState_.aiConfig.apiKey = apiKey;
+                } else if (currentProvider == 3) { // Ollama
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3f, 1.0f, 0.3f, 1.0f));
+                    ImGui::TextWrapped("✓ Ollama runs locally - no API key needed!");
+                    ImGui::PopStyleColor();
+                    ImGui::TextWrapped("Install from: https://ollama.com");
+                    ImGui::TextWrapped("Then run: ollama pull llama3.2");
+                }
+                
+                ImGui::Spacing();
+                
+                // Model selection with defaults
+                if (model[0] == '\0') {
+                    const char* defaultModel = "gpt-3.5-turbo";
+                    if (currentProvider == 0) defaultModel = "gpt-3.5-turbo"; // OpenAI
+                    else if (currentProvider == 1) defaultModel = "llama-3.1-70b-versatile"; // Groq
+                    else if (currentProvider == 2) defaultModel = "gemini-pro"; // Gemini
+                    else if (currentProvider == 3) defaultModel = "llama3.2"; // Ollama
+                    strncpy_s(model, defaultModel, sizeof(model) - 1);
+                }
+                ImGui::InputText("Model", model, sizeof(model));
+                appState_.aiConfig.model = model;
+                
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Spacing();
+                
+                // Test and Save buttons
+                if (ImGui::Button("Test Connection", ImVec2(150, 0))) {
+                    testing = true;
+                    testResult = "Testing...";
+                    
+                    // First update the config with current UI values
+                    appState_.aiConfig.provider = static_cast<AIProvider>(currentProvider);
+                    appState_.aiConfig.apiKey = std::string(apiKey);
+                    appState_.aiConfig.model = std::string(model);
+                    if (strlen(endpoint) > 0) {
+                        appState_.aiConfig.endpoint = std::string(endpoint);
+                    }
+                    
+                    // Now update and test AI client
+                    if (aiClient_) {
+                        try {
+                            aiClient_->UpdateConfig(appState_.aiConfig);
+                            
+                            // Only test if we have an API key
+                            if (strlen(apiKey) > 0) {
+                                // Check if AI client is actually available (CURL initialized)
+                                if (!aiClient_->IsAvailable()) {
+                                    testResult = "✗ HTTP library (CURL) not available";
+                                    SetStatusMessage("CURL library required for AI features - see installation guide");
+                                } else {
+                                    // Test with simple query
+                                    AIResponse response = aiClient_->TranslateToCommand("list files");
+                                    if (response.success) {
+                                        testResult = "✓ Connection successful!";
+                                        SetStatusMessage("AI connection test passed!");
+                                    } else {
+                                        testResult = "✗ Error: " + response.error;
+                                        SetStatusMessage("AI connection test failed: " + response.error);
+                                    }
+                                }
+                            } else {
+                                testResult = "✗ Please enter an API key";
+                                SetStatusMessage("API key required for testing");
+                            }
+                        } catch (const std::exception& e) {
+                            testResult = "✗ Exception: " + std::string(e.what());
+                            SetStatusMessage("Test failed with exception");
+                        }
+                    } else {
+                        testResult = "✗ AI client not initialized";
+                    }
+                    testing = false;
+                }
+                
                 ImGui::SameLine();
                 if (ImGui::Button("Save", ImVec2(150, 0))) {
+                    // Save configuration
+                    if (aiClient_) {
+                        aiClient_->UpdateConfig(appState_.aiConfig);
+                    }
+                    SaveConfiguration();
                     SetStatusMessage("AI settings saved!");
+                }
+                
+                // Show test result
+                if (!testResult.empty()) {
+                    ImGui::Spacing();
+                    if (testResult.find("✓") != std::string::npos) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3f, 1.0f, 0.3f, 1.0f));
+                    } else if (testResult.find("✗") != std::string::npos) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+                    } else {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.3f, 1.0f));
+                    }
+                    ImGui::TextWrapped("%s", testResult.c_str());
+                    ImGui::PopStyleColor();
                 }
 #else
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.8f, 0.0f, 1.0f));

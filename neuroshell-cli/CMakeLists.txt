@@ -3,7 +3,13 @@
 # vcpkg manifest mode support - use local vcpkg_installed
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows")
     message(STATUS "Using vcpkg manifest mode from vcpkg_installed/")
-    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows")
+    set(CMAKE_PREFIX_PATH 
+        "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows"
+        "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows/share"
+        ${CMAKE_PREFIX_PATH}
+    )
+    set(CURL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows/include")
+    set(CURL_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows/lib/libcurl.lib")
 endif()
 
 project(NeuroShell VERSION 2.0.0 LANGUAGES CXX)
@@ -53,14 +59,40 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${GLFW_DIR} ${CMAKE_BINARY_DIR}/glfw EXCLUDE_FROM_ALL)
 
-# CURL (optional)
+# CURL (required for AI features)
 if(ENABLE_CURL)
-    find_package(CURL REQUIRED)
+    # Try to find CURL
+    find_package(CURL QUIET)
+    
+    if(NOT CURL_FOUND)
+        # Manual search in vcpkg directory
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows")
+            set(CURL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows/include")
+            set(CURL_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows/lib/libcurl.lib")
+            
+            if(EXISTS ${CURL_INCLUDE_DIR} AND EXISTS ${CURL_LIBRARY})
+                set(CURL_FOUND TRUE)
+                message(STATUS "CURL found manually in vcpkg_installed/")
+                
+                # Create imported target
+                add_library(CURL::libcurl UNKNOWN IMPORTED)
+                set_target_properties(CURL::libcurl PROPERTIES
+                    IMPORTED_LOCATION "${CURL_LIBRARY}"
+                    INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
+                )
+            endif()
+        endif()
+    endif()
+    
     if(CURL_FOUND)
-        message(STATUS "CURL found - AI features enabled")
+        message(STATUS "✓ CURL found - AI HTTP features enabled")
+        message(STATUS "  CURL Include: ${CURL_INCLUDE_DIR}")
+        message(STATUS "  CURL Library: ${CURL_LIBRARY}")
         add_compile_definitions(ENABLE_CURL)
     else()
-        message(WARNING "CURL not found - AI features disabled")
+        message(WARNING "✗ CURL not found - AI HTTP features will be disabled")
+        message(WARNING "  Run: vcpkg install curl:x64-windows")
+        set(ENABLE_CURL OFF)
     endif()
 else()
     message(STATUS "CURL disabled - AI features will not be available")
@@ -113,6 +145,11 @@ target_include_directories(neuroshell PRIVATE
     ${JSON_DIR}/include
 )
 
+# Add CURL include directory if available
+if(ENABLE_CURL AND CURL_FOUND)
+    target_include_directories(neuroshell PRIVATE ${CURL_INCLUDE_DIR})
+endif()
+
 target_link_libraries(neuroshell PRIVATE
     imgui
     d3d11
@@ -122,6 +159,28 @@ target_link_libraries(neuroshell PRIVATE
 
 if(ENABLE_CURL AND CURL_FOUND)
     target_link_libraries(neuroshell PRIVATE CURL::libcurl)
+    
+    # Copy CURL and its dependencies to output directory on Windows
+    if(WIN32)
+        set(VCPKG_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows/bin")
+        
+        # List of DLLs to copy (CURL + dependencies)
+        set(REQUIRED_DLLS
+            "libcurl.dll"
+            "zlib1.dll"
+        )
+        
+        foreach(DLL_FILE ${REQUIRED_DLLS})
+            if(EXISTS "${VCPKG_BIN_DIR}/${DLL_FILE}")
+                add_custom_command(TARGET neuroshell POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${VCPKG_BIN_DIR}/${DLL_FILE}"
+                        "$<TARGET_FILE_DIR:neuroshell>/${DLL_FILE}"
+                    COMMENT "Copying ${DLL_FILE} to output directory"
+                )
+            endif()
+        endforeach()
+    endif()
 endif()
 
 # Windows-specific settings
@@ -139,6 +198,16 @@ endif()
 install(TARGETS neuroshell DESTINATION bin)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/config DESTINATION .)
 install(FILES ${CMAKE_SOURCE_DIR}/README.md DESTINATION .)
+
+# Install CURL DLL if available
+if(ENABLE_CURL AND WIN32)
+    set(VCPKG_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-windows/bin")
+    foreach(DLL_FILE "libcurl.dll" "zlib1.dll")
+        if(EXISTS "${VCPKG_BIN_DIR}/${DLL_FILE}")
+            install(FILES "${VCPKG_BIN_DIR}/${DLL_FILE}" DESTINATION bin)
+        endif()
+    endforeach()
+endif()
 
 message(STATUS "NeuroShell Configuration Complete")
 message(STATUS "  Build Type: ${CMAKE_BUILD_TYPE}")

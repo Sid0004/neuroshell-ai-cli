@@ -17,6 +17,29 @@ void SimpleAI::InitializePatterns() {
     patterns_["show directory"] = "dir";
     patterns_["list folder"] = "dir";
     patterns_["show folder"] = "dir";
+    patterns_["list all files"] = "dir /s";
+    patterns_["show all files"] = "dir /s";
+    patterns_["find files"] = "dir /s";
+    
+    // Specific file types
+    patterns_["list text files"] = "dir *.txt";
+    patterns_["show text files"] = "dir *.txt";
+    patterns_["list python files"] = "dir *.py";
+    patterns_["show python files"] = "dir *.py";
+    patterns_["list javascript files"] = "dir *.js";
+    patterns_["list cpp files"] = "dir *.cpp";
+    patterns_["list readme files"] = "dir *readme*";
+    patterns_["show readme files"] = "dir *readme*";
+    patterns_["find readme"] = "dir *readme* /s";
+    
+    // Navigation
+    patterns_["go back"] = "cd ..";
+    patterns_["go up"] = "cd ..";
+    patterns_["back directory"] = "cd ..";
+    patterns_["parent folder"] = "cd ..";
+    patterns_["show current directory"] = "cd";
+    patterns_["where am i"] = "cd";
+    patterns_["current path"] = "cd";
     
     // Navigation
     patterns_["go back"] = "cd ..";
@@ -92,6 +115,33 @@ std::string SimpleAI::TranslateToCommand(const std::string& input) {
     }
     
     // Smart matching for common patterns
+    
+    // Handle file listing with extensions
+    if ((cleaned.find("list") != std::string::npos || cleaned.find("show") != std::string::npos || 
+         cleaned.find("find") != std::string::npos) && 
+        (cleaned.find("file") != std::string::npos || cleaned.find("readme") != std::string::npos)) {
+        
+        // Check for specific file types
+        if (cleaned.find("readme") != std::string::npos) {
+            return "dir *readme* /s";
+        }
+        if (cleaned.find("python") != std::string::npos || cleaned.find(".py") != std::string::npos) {
+            return "dir *.py /s";
+        }
+        if (cleaned.find("javascript") != std::string::npos || cleaned.find(".js") != std::string::npos) {
+            return "dir *.js /s";
+        }
+        if (cleaned.find("text") != std::string::npos || cleaned.find(".txt") != std::string::npos) {
+            return "dir *.txt /s";
+        }
+        if (cleaned.find("cpp") != std::string::npos || cleaned.find(".cpp") != std::string::npos) {
+            return "dir *.cpp /s";
+        }
+        if (cleaned.find("all") != std::string::npos) {
+            return "dir /s";
+        }
+    }
+    
     if (cleaned.find("create") != std::string::npos && cleaned.find("folder") != std::string::npos) {
         // Extract folder name if provided
         size_t pos = cleaned.find("folder");
