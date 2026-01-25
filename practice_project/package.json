@@ -1,0 +1,24 @@
+{
+  "name": "practice_project",
+  "version": "1.0.0",
+  "description": "backend practice project",
+  "keywords": [
+    "js",
+    "backend"
+  ],
+  "homepage": "https://github.com/Sid0004/P-backend#readme",
+  "bugs": {
+    "url": "https://github.com/Sid0004/P-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sid0004/P-backend.git"
+  },
+  "license": "ISC",
+  "author": "siddhnat sharma",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
